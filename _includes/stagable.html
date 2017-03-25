@@ -1,0 +1,7 @@
+{% unless page.live %}
+<script type="text/javascript">
+  if (document.location.hash !== '#preview' && prompt('password please') !== 'x') {
+    document.location = '/'
+  }
+</script>
+{% endunless %}

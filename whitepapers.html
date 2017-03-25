@@ -1,0 +1,24 @@
+---
+layout: page
+title: Whitepapers
+permalink: /whitepapers/
+nav: true
+---
+<p class="rss-subscribe">Subscribe <a href="{{ "/feed.xml" | relative_url }}">via RSS</a></p>
+<div class="home">
+
+  <ul class="post-list">
+    {% for post in site.posts %}
+      {% if post.live and post.layout == 'whitepaper' %}
+        <li>
+          <h2>
+            <a class="post-link" href="{{ post.url | relative_url }}">{{ post.title | escape }}</a>
+          </h2>
+          {{ post.content | strip_html | truncatewords:75}}<br>
+          <a class="post-read-more" href="{{ post.url }}">Read more...</a><br><br>
+        </li>
+      {% endif %}
+    {% endfor %}
+  </ul>
+
+</div>

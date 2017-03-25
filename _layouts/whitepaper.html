@@ -1,0 +1,60 @@
+---
+layout: default
+---
+{% include stagable.html %}
+<article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">{{ page.title | escape }}</h1>
+    {% if page.tagline %}
+    <p class="post-tagline">{{ page.tagline | escape }}</p>
+    {% endif %}
+  </header>
+    <div class="post-content" itemprop="articleBody" id="content">
+      <div style="position:relative;width:100%;">
+        <div style="position:absolute;left:100%; width:50px;">
+          <div style="position:fixed; border-left: 2px solid #eee; padding-left: 10px; margin-left:5px; color:#333; display:none; padding-right:10px" id="glossary-preview">
+            <h4 id="glossary-title"></h4>
+            <div id="glossary-content" style="font-size: .8em"></div>
+          </div>
+        </div>
+      </div>
+      {{ content }}
+    </div>
+    <script>
+      const glossaryPreview = document.querySelector('#glossary-preview')
+      const glossaryTitle = document.querySelector('#glossary-title')
+      const glossaryContent = document.querySelector('#glossary-content')
+      const glossaryIndex = getElementIndex(document.querySelector('#glossary'))
+
+      function getElementIndex(element) {
+          var i = 1;
+          while (element = element.previousSibling) { ++i }
+          return i;
+      }
+
+
+      document.querySelectorAll('a').forEach((element) => {
+        element.addEventListener('mouseenter', (event) => {
+          glossaryTitle.textContent = ''
+          glossaryContent.textContent = ''
+          if (!element.hash || element.hash === '#') {
+            return
+          }
+          const glossaryHeader = document.querySelector(element.hash)
+          if (!glossaryHeader) {
+            return
+          }
+          if (getElementIndex(glossaryHeader) <= glossaryIndex) {
+            return
+          }
+          glossaryTitle.textContent = glossaryHeader.textContent
+          glossaryContent.innerHTML = glossaryHeader.nextSibling.nextSibling.innerHTML
+          glossaryPreview.style.display = ''
+        })
+        // element.addEventListener('mouseleave', (event) => {
+        //   glossaryPreview.style.display = 'none'
+        // })
+      })
+    </script>
+  </div>
+</article>

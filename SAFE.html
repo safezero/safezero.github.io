@@ -1,0 +1,83 @@
+---
+layout: page
+title: SAFE
+permalink: /SAFE/
+nav: true
+---
+<p>
+  SAFE is how we say thank you to those who are helping support SafeMarket. It's an ERC20 token registered on at <code>0xa7129932d73e2db3466f9321be1258b0f55f6a67</code>. SAFE cannot be purchased, rather they must be earned by completing bounties.
+</p>
+<hr>
+<br>
+<div ng-app="myApp">
+  <div ng-controller="DistributionsController">
+    <big>Total Supply: <b>[[totalSupply]] SAFE</b></big>
+    <br>
+    <br>
+    <table>
+      <tr>
+        <th>Timestamp</th>
+        <th>Receiver</th>
+        <th>SAFE</th>
+        <th>Memo</th>
+      </tr>
+      <tr ng-repeat="distribution in distributions | reverse">
+        <td>[[distribution.timestamp | timeAgo]]</td>
+        <td><code>[[distribution.receiver]]</code></td>
+        <td>[[distribution.value]]</td>
+        <td>[[distribution.memo]]</td>
+      </tr>
+    </table>
+  </div>
+</div>
+<br>
+<script src="/js/web3.min.js"></script>
+<script src="/js/angular.min.js"></script>
+<script src="/js/angular-timeago.min.js"></script>
+<script type="text/javascript">
+  const web3 = new Web3()
+  web3.setProvider(new web3.providers.HttpProvider('https://mainnet.infura.io/bvPKyTSGGaeekwhJ8Mnn'));
+
+  const distributokenABI = [{"constant":true,"inputs":[],"name":"name","outputs":[{"name":"","type":"string"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_value","type":"uint256"}],"name":"approve","outputs":[{"name":"success","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"totalSupply","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"_from","type":"address"},{"name":"_to","type":"address"},{"name":"_value","type":"uint256"}],"name":"transferFrom","outputs":[{"name":"success","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"decimals","outputs":[{"name":"","type":"uint8"}],"payable":false,"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"distributions","outputs":[{"name":"timestamp","type":"uint256"},{"name":"receiever","type":"address"},{"name":"value","type":"uint256"},{"name":"memo","type":"bytes32"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"version","outputs":[{"name":"","type":"string"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"hashedSecret","outputs":[{"name":"","type":"bytes16"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"secret","type":"bytes16"},{"name":"_hashedSecret","type":"bytes16"},{"name":"checksum","type":"bytes4"},{"name":"_owner","type":"address"}],"name":"setOwner","outputs":[],"payable":false,"type":"function"},{"constant":true,"inputs":[{"name":"_owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"balance","type":"uint256"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"owner","outputs":[{"name":"","type":"address"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"symbol","outputs":[{"name":"","type":"string"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"_to","type":"address"},{"name":"_value","type":"uint256"}],"name":"transfer","outputs":[{"name":"success","type":"bool"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"secret","type":"bytes16"},{"name":"_hashedSecret","type":"bytes16"},{"name":"checksum","type":"bytes4"},{"name":"_receiver","type":"address"},{"name":"_value","type":"uint256"},{"name":"_memo","type":"bytes32"}],"name":"distribute","outputs":[],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"secret","type":"bytes16"},{"name":"_hashedSecret","type":"bytes16"},{"name":"checksum","type":"bytes4"},{"name":"receivers","type":"address[]"},{"name":"values","type":"uint256[]"},{"name":"memos","type":"bytes32[]"}],"name":"distribute","outputs":[],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_value","type":"uint256"},{"name":"_extraData","type":"bytes"}],"name":"approveAndCall","outputs":[{"name":"success","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[{"name":"_owner","type":"address"},{"name":"_spender","type":"address"}],"name":"allowance","outputs":[{"name":"remaining","type":"uint256"}],"payable":false,"type":"function"},{"inputs":[{"name":"_name","type":"string"},{"name":"_symbol","type":"string"},{"name":"_hashedSecret","type":"bytes16"},{"name":"checksum","type":"bytes4"}],"payable":false,"type":"constructor"},{"payable":false,"type":"fallback"},{"anonymous":false,"inputs":[{"indexed":true,"name":"_from","type":"address"},{"indexed":true,"name":"_to","type":"address"},{"indexed":false,"name":"_value","type":"uint256"}],"name":"Transfer","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"_owner","type":"address"},{"indexed":true,"name":"_spender","type":"address"},{"indexed":false,"name":"_value","type":"uint256"}],"name":"Approval","type":"event"}]
+
+  const app = angular.module('myApp', ['yaru22.angular-timeago'])
+  const safeContract = web3.eth.contract(distributokenABI).at('0xa7129932d73e2db3466f9321be1258b0f55f6a67')
+
+  app.config(($interpolateProvider) => {
+    $interpolateProvider.startSymbol('[[');
+    $interpolateProvider.endSymbol(']]');
+  })
+
+  app.filter('reverse', function() {
+  return function(items) {
+    return items.slice().reverse();
+  };
+});
+
+  app.controller('DistributionsController', ($scope) => {
+    $scope.distributions = []
+
+    safeContract.totalSupply((err, totalSupply) => {
+      console.log($scope)
+      $scope.totalSupply = totalSupply.toNumber()
+      $scope.$apply()
+    })
+
+    function getNextGift() {
+      safeContract.distributions($scope.distributions.length, (err, distribution) => {
+        if (distribution[0].eq(0)) {
+          return
+        }
+        $scope.distributions.push({
+          timestamp: distribution[0].times(1000).toNumber(),
+          receiver: distribution[1],
+          value: distribution[2].toNumber(),
+          memo: web3.toAscii(distribution[3])
+        })
+        $scope.$apply()
+        getNextGift()
+      })
+    }
+    getNextGift()
+  })
+</script>
